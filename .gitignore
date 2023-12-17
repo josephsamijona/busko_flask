@@ -1,0 +1,37 @@
+# Fichiers générés par Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Dossiers générés par les environnements virtuels
+venv/
+env/
+*.env/
+
+# Fichiers de log
+*.log
+
+# Fichiers générés par l'IDE
+.vscode/
+.idea/
+
+# Fichiers de configuration spécifiques à l'utilisateur
+*.swp
+*.swo
+*~
+
+# Fichiers de dépendances et de construction générés
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+*.json
+
+# Fichiers de configuration de l'environnement
+.env
+.env.local
+
+# Dossiers spécifiques à certains outils
+node_modules/
