@@ -1,0 +1,10 @@
+Flask
+Flask-WTF
+Flask-SQLAlchemy
+Flask-Migrate
+Flask-Login
+Flask-RESTful
+Flask-Testing
+SQLAlchemy
+Flask-Mail
+WTForms
