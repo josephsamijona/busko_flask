@@ -25,8 +25,21 @@ def create_app():
     login_manager.init_app(app)
 
     # Importe les routes
-    from app.routes import patient_routes, rendezvous_routes, stock_routes, finance_routes, pharmacy_routes, lab_routes, analytic, dashboard, setting, historique, histrdvous, prescription
+    
+    from app.routes.patient_routes import patient_routes
+    from app.routes.rendezvous_routes import rendezvous_routes
+    from app.routes.finance_routes import finance_routes
+    from app.routes.pharmacy_routes import pharmacy_routes
+    from app.routes.lab_routes import lab_routes
+    from app.routes.analytic import analytic
+    from app.routes.dashboard import dashboard
+    from app.routes.setting import setting
+    from app.routes.historique import historique
+    from app.routes.histrdvous import histrdvous
+    from app.routes.prescription import prescription
+    from app.routes.stock_routes import stock_routes
 
+    
     # Ajoute les blueprints (routes) à l'application
     app.register_blueprint(patient_routes)
     app.register_blueprint(rendezvous_routes)
