@@ -16,7 +16,7 @@ def create_app():
 
     # Configurations de l'application
     app.config['SECRET_KEY'] = 'your_secret_key_here'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///clinic.db'
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///cliniclelabo.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     # Initialise les extensions
