@@ -8,4 +8,4 @@ Flask-Testing
 SQLAlchemy
 Flask-Mail
 WTForms
-Flask-Migrate
+Flask-Script

@@ -4,24 +4,33 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_login import LoginManager
 from flask_restful import Api
+from .models import db, Utilisateur, Connexion, DossierMedical, HistoriquePatient, Inventaire, MouvementsInventaire, Fournisseurs, AlertesReapprovisionnement, Rendezvous, Factures, Revenus, Depenses, ExamensHemogramme, ExamenUrine, ExamensBiochimie, ExamensSelles, Serologie, FichesPrescription, Ventes, MouvementsMedicaments, AlertesReapprovisionnementPharmacie, HistoriqueRendezvous, HistoriqueDossiersMedicaux, HistoriqueFactures, HistoriqueMedicamentsPharmacie
 
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///dbcliniclabo.db'  # Utilisez SQLite pour simplifier
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False 
+db.init_app(app)
+migrate = Migrate(app, db)
 # Crée les instances des extensions
-db = SQLAlchemy()
-migrate = Migrate()
 login_manager = LoginManager()
 api = Api()
+
+# Import your models
+from .models import Utilisateur, Connexion, DossierMedical, HistoriquePatient, Inventaire, MouvementsInventaire, Fournisseurs, AlertesReapprovisionnement, Rendezvous, Factures, Revenus, Depenses, ExamensHemogramme, ExamenUrine, ExamensBiochimie, ExamensSelles, Serologie, FichesPrescription, Ventes, MouvementsMedicaments, AlertesReapprovisionnementPharmacie, HistoriqueRendezvous, HistoriqueDossiersMedicaux, HistoriqueFactures, HistoriqueMedicamentsPharmacie
+
+# Additional configurations or routes can be added here
+
 
 def create_app():
     app = Flask(__name__)
 
     # Configurations de l'application
     app.config['SECRET_KEY'] = 'your_secret_key_here'
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///cliniclelabo.db'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+     
 
     # Initialise les extensions
-    db.init_app(app)
-    migrate.init_app(app, db)
+    
+   
     login_manager.init_app(app)
 
     # Importe les routes
