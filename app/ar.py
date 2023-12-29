@@ -478,8 +478,7 @@ class AlertesReapprovisionnementPharmacie(db.Model):
     Article = db.relationship('Inventaire', backref='alertes_reapprovisionnement_pharmacie')  # Relation avec la table Inventaire
     User = db.relationship('Utilisateur', backref='alertes_reapprovisionnement_pharmacie')  # Relation avec la table Utilisateurs
 
-db = SQLAlchemy()
-
+ 
 class HistoriqueRendezvous(db.Model):
     Historique_Rendezvous_Id = db.Column(db.String(255), primary_key=True)
     Rendezvous_Id = db.Column(db.String(255))

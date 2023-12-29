@@ -9,3 +9,4 @@ SQLAlchemy
 Flask-Mail
 WTForms
 Flask-Script
+matplotlib
