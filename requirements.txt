@@ -10,3 +10,7 @@ Flask-Mail
 WTForms
 Flask-Script
 matplotlib
+seaborn 
+reportlab
+scikit-learn
+python-socketio
