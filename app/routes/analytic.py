@@ -1252,6 +1252,13 @@ class DataFilter:
 
     @staticmethod
     def filter_by_date(data, start_date, end_date):
+        try:
+            # Assurez-vous que les dates sont dans le bon format
+            start_date = datetime.strptime(start_date, "%Y-%m-%d")
+            end_date = datetime.strptime(end_date, "%Y-%m-%d")
+        except ValueError:
+            raise ValueError("Format de date incorrect. Utilisez le format YYYY-MM-DD.")
+
         # Filtrer les données par date
         filtered_data = [item for item in data if start_date <= item.date <= end_date]
         return filtered_data
@@ -1259,8 +1266,10 @@ class DataFilter:
     @staticmethod
     def filter_by_category(data, category):
         # Filtrer les données par catégorie
+         # Filtrer les données par catégorie
         filtered_data = [item for item in data if item.category == category]
         return filtered_data
+         
 
     @staticmethod
     def filter_by_supplier(data, supplier):
