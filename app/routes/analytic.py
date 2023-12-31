@@ -139,7 +139,6 @@ class PatientAnalytics:
         pass
 
      
-    
     def generate_blood_type_distribution_chart(self, patients_data):
        # Exemple de diagramme en barres pour la répartition des patients par groupe sanguin
         # Utilisez les données appropriées pour générer le graphique
