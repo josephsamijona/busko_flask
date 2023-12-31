@@ -1,8 +1,8 @@
 from flask import Blueprint, render_template, jsonify
-from models import (
+from app.models import (
     DossierMedical, HistoriquePatient, Rendezvous,
     Inventaire, MouvementsInventaire, Fournisseurs, AlertesReapprovisionnement,
-    Factures, Revenus, Depenses, Ventes
+    Factures, Revenus, Depenses, Ventes, ExamensHemogramme, ExamenUrine, ExamensBiochimie, ExamensSelles, Serologie
 )
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -18,6 +18,7 @@ from io import StringIO
 from mpl_toolkits.basemap import Basemap
 from collections import Counter
 from collections import defaultdict
+import numpy as np
 
 
 analytics = Blueprint('analytics', __name__)
@@ -850,18 +851,160 @@ class FinanceAnalytics:
         plt.ylabel('Montant')
         plt.show()
 
-    def generate_income_expense_chart(self, income_data, expenses_data):
-        # Ajoutez ici la logique pour générer un graphique des revenus et des dépenses
-        pass
+    def generate_total_revenue_chart(self, revenue_data):
+        # Revenus Totals par Période
+        # Exemple d'utilisation de la bibliothèque Matplotlib pour générer un graphique en ligne
+        periods = [entry.period for entry in revenue_data]
+        total_revenues = [entry.total_revenue for entry in revenue_data]
+
+        plt.plot(periods, total_revenues, marker='o', color='blue')
+        plt.title('Revenus Totals par Période')
+        plt.xlabel('Période')
+        plt.ylabel('Revenus Totals')
+        plt.show()
+
+    def generate_revenue_distribution_by_source_chart(self, revenue_data):
+        # Répartition des Revenus par Source
+        # Exemple d'utilisation de la bibliothèque Matplotlib pour générer un diagramme en barres
+        sources = [entry.source for entry in revenue_data]
+        revenue_by_source = [entry.amount for entry in revenue_data]
+
+        plt.bar(sources, revenue_by_source, color='green')
+        plt.title('Répartition des Revenus par Source')
+        plt.xlabel('Source')
+        plt.ylabel('Revenus')
+        plt.show()
+
+    def generate_revenue_by_service_chart(self, revenue_data):
+        # Revenus par Type de Service/Produit
+        # Exemple d'utilisation de la bibliothèque Matplotlib pour générer un diagramme en barres
+        services = [entry.service for entry in revenue_data]
+        revenue_by_service = [entry.amount for entry in revenue_data]
+
+        plt.bar(services, revenue_by_service, color='orange')
+        plt.title('Revenus par Type de Service/Produit')
+        plt.xlabel('Service/Produit')
+        plt.ylabel('Revenus')
+        plt.show()
+
+    def generate_top_n_invoices_chart(self, invoice_data, n=5):
+        # Top N des Factures les plus Élevées
+        # Exemple d'utilisation de la bibliothèque Matplotlib pour générer un diagramme en barres
+        top_invoices = sorted(invoice_data, key=lambda x: x.amount, reverse=True)[:n]
+        invoice_names = [entry.name for entry in top_invoices]
+        invoice_amounts = [entry.amount for entry in top_invoices]
+
+        plt.bar(invoice_names, invoice_amounts, color='purple')
+        plt.title('Top N des Factures les plus Élevées')
+        plt.xlabel('Factures')
+        plt.ylabel('Montant')
+        plt.show()
+
+    def generate_evolution_of_revenue_by_source_chart(self, revenue_data):
+        # Évolution des Revenus par Source
+        # Exemple d'utilisation de la bibliothèque Matplotlib pour générer un graphique en ligne ou un diagramme en barres
+        sources = [entry.source for entry in revenue_data]
+        revenue_by_source = [entry.amount for entry in revenue_data]
+
+        plt.plot(sources, revenue_by_source, marker='o', color='red')
+        plt.title('Évolution des Revenus par Source')
+        plt.xlabel('Source')
+        plt.ylabel('Revenus')
+        plt.show()
+
+    def generate_revenue_distribution_by_category_chart(self, revenue_data):
+        # Répartition des Revenus par Catégorie
+        # Exemple d'utilisation de la bibliothèque Matplotlib pour générer un diagramme en barres
+        categories = [entry.category for entry in revenue_data]
+        revenue_by_category = [entry.amount for entry in revenue_data]
+
+        plt.bar(categories, revenue_by_category, color='brown')
+        plt.title('Répartition des Revenus par Catégorie')
+        plt.xlabel('Catégorie')
+        plt.ylabel('Revenus')
+        plt.show()
+
+    def generate_top_n_revenues_chart(self, revenue_data, n=5):
+        # Top N des Revenus les plus Élevés
+        # Exemple d'utilisation de la bibliothèque Matplotlib pour générer un diagramme en barres
+        top_revenues = sorted(revenue_data, key=lambda x: x.amount, reverse=True)[:n]
+        revenue_names = [entry.name for entry in top_revenues]
+        revenue_amounts = [entry.amount for entry in top_revenues]
+
+        plt.bar(revenue_names, revenue_amounts, color='pink')
+        plt.title('Top N des Revenus les plus Élevés')
+        plt.xlabel('Revenus')
+        plt.ylabel('Montant')
+        plt.show()
+
+    def generate_revenue_distribution_by_payment_responsible_chart(self, revenue_data):
+        # Répartition des Revenus par Responsable de Paiement
+        # Exemple d'utilisation de la bibliothèque Matplotlib pour générer un diagramme en barres
+        responsibles = [entry.responsible for entry in revenue_data]
+        revenue_by_responsible = [entry.amount for entry in revenue_data]
+
+        plt.bar(responsibles, revenue_by_responsible, color='cyan')
+        plt.title('Répartition des Revenus par Responsable de Paiement')
+        plt.xlabel('Responsable de Paiement')
+        plt.ylabel('Revenus')
+        plt.show()
+
+    def generate_expense_distribution_by_category_chart(self, expense_data):
+        # Répartition des Dépenses par Catégorie
+        # Exemple d'utilisation de la bibliothèque Matplotlib pour générer un diagramme en barres
+        categories = [entry.category for entry in expense_data]
+        expense_by_category = [entry.amount for entry in expense_data]
+
+        plt.bar(categories, expense_by_category, color='gray')
+        plt.title('Répartition des Dépenses par Catégorie')
+        plt.xlabel('Catégorie')
+        plt.ylabel('Dépenses')
+        plt.show()
+
+    def generate_average_amount_of_expenses_by_type_chart(self, expense_data):
+        # Montant Moyen des Dépenses par Type
+        # Exemple d'utilisation de la bibliothèque Matplotlib pour générer un diagramme en barres
+        types = [entry.type for entry in expense_data]
+        average_expense_by_type = [entry.amount for entry in
+                                    expense_data]
+
+        plt.bar(types, average_expense_by_type, color='yellow')
+        plt.title('Montant Moyen des Dépenses par Type')
+        plt.xlabel('Type')
+        plt.ylabel('Montant Moyen des Dépenses')
+        plt.show()
+
+    def generate_top_n_expenses_chart(self, expense_data, n=5):
+        # Top N des Dépenses les plus Élevées
+        # Exemple d'utilisation de la bibliothèque Matplotlib pour générer un diagramme en barres
+        top_expenses = sorted(expense_data, key=lambda x: x.amount, reverse=True)[:n]
+        expense_names = [entry.name for entry in top_expenses]
+        expense_amounts = [entry.amount for entry in top_expenses]
+
+        plt.bar(expense_names, expense_amounts, color='lime')
+        plt.title('Top N des Dépenses les plus Élevées')
+        plt.xlabel('Dépenses')
+        plt.ylabel('Montant')
+        plt.show()
+
+    def generate_evolution_of_expenses_by_status_chart(self, expense_data):
+        # Évolution des Dépenses par Statut
+        # Exemple d'utilisation de la bibliothèque Matplotlib pour générer un graphique en ligne
+        statuses = [entry.status for entry in expense_data]
+        expenses_by_status = [entry.amount for entry in expense_data]
+
+        plt.plot(statuses, expenses_by_status, marker='o', color='magenta')
+        plt.title('Évolution des Dépenses par Statut')
+        plt.xlabel('Statut')
+        plt.ylabel('Dépenses')
+        plt.show()
+
 
     def generate_sales_margins_chart(self, sales_data):
         # Ajoutez ici la logique pour générer un graphique des ventes et des marges
         pass
 
-    def generate_payment_analysis_chart(self):
-        # Ajoutez ici la logique pour générer un graphique de l'analyse des modes de paiement
-        pass
-
+    
     def get_finance_data(self):
         invoices_data = Factures.query.all()
         income_data = Revenus.query.all()
@@ -875,43 +1018,233 @@ class FinanceAnalytics:
 
         # Générer des graphiques pour la section Finance
         self.generate_invoice_tracking_chart(invoices_data)
-        self.generate_income_expense_chart(income_data, expenses_data)
         self.generate_sales_margins_chart(sales_data)
-        self.generate_payment_analysis_chart()
+        self.generate_total_revenue_chart(income_data)
+        self.generate_revenue_distribution_by_source_chart(income_data)
+        self.generate_revenue_by_service_chart(income_data)
+        self.generate_top_n_invoices_chart(invoices_data)
+        self.generate_evolution_of_revenue_by_source_chart(income_data)
+        self.generate_revenue_distribution_by_category_chart(income_data)
+        self.generate_top_n_revenues_chart(income_data)
+        self.generate_revenue_distribution_by_payment_responsible_chart(income_data)
+        self.generate_expense_distribution_by_category_chart(expenses_data)
+        self.generate_average_amount_of_expenses_by_type_chart(expenses_data)
+        self.generate_top_n_expenses_chart(expenses_data)
+        self.generate_evolution_of_expenses_by_status_chart(expenses_data)
+         
 
 class LabAnalytics:
     def __init__(self):
         pass
+    
+    def generate_urine_statistics(self, urine_data):
+        # Statistiques générales pour les Examens d'Urine
+        total_exams = len(urine_data)
+        print(f"Nombre total d'examens d'urine : {total_exams}")
 
-    def generate_test_results_chart(self, test_results):
-        # Exemple de graphique pour les résultats des examens
-        # Ajoutez ici la logique pour générer le graphique
-        pass
+        # Calcul des moyennes, médianes et écart-types pour les paramètres quantitatifs
+        quantitative_parameters = ["Densite", "pH"]
+        for parameter in quantitative_parameters:
+            values = [getattr(exam, parameter) for exam in urine_data]
+            mean_value = np.mean(values)
+            median_value = np.median(values)
+            std_deviation = np.std(values)
+            print(f"{parameter} - Moyenne : {mean_value}, Médiane : {median_value}, Écart-type : {std_deviation}")
 
-    def generate_test_frequency_chart(self, test_frequency):
-        # Exemple de graphique pour la fréquence des tests
-        # Ajoutez ici la logique pour générer le graphique
-        pass
+    def generate_urine_graphs(self, urine_data):
+        # Graphiques pour les Examens d'Urine
+        # Graphique en barres pour la présence de différentes composantes
+        components = ["Glucose", "Proteinurie", "Bilirubinurie"]
+        component_counts = {component: sum([getattr(exam, component) for exam in urine_data]) for component in components}
+        plt.bar(component_counts.keys(), component_counts.values(), color='green')
+        plt.title('Présence de Composants dans les Examens d\'Urine')
+        plt.xlabel('Composant')
+        plt.ylabel('Nombre d\'Examens')
+        plt.show()
 
-    def generate_result_comparison_chart(self, result_comparison):
-        # Exemple de graphique pour la comparaison des résultats
-        # Ajoutez ici la logique pour générer le graphique
-        pass
+        # Graphiques en secteurs pour la répartition des couleurs et des aspects (hypothétique)
+        color_counts = {"Jaune": 30, "Rouge": 15, "Incolore": 10}
+        aspect_counts = {"Clair": 25, "Trouble": 20, "Normal": 10}
+        plt.pie(color_counts.values(), labels=color_counts.keys(), autopct='%1.1f%%', startangle=90, colors=['yellow', 'red', 'gray'])
+        plt.title('Répartition des Couleurs dans les Examens d\'Urine')
+        plt.show()
+
+        plt.pie(aspect_counts.values(), labels=aspect_counts.keys(), autopct='%1.1f%%', startangle=90, colors=['blue', 'orange', 'green'])
+        plt.title('Répartition des Aspects dans les Examens d\'Urine')
+        plt.show()
+    
+    def generate_biochemistry_statistics(self, biochemistry_data):
+        # Statistiques générales pour les Examens de Biochimie
+        total_exams = len(biochemistry_data)
+        print(f"Nombre total d'examens de biochimie : {total_exams}")
+
+        # Calcul des moyennes, médianes et écart-types pour chaque paramètre biochimique
+        biochemistry_parameters = ["Parameter1", "Parameter2", "Parameter3"]  # Remplacez par les noms réels des paramètres
+        for parameter in biochemistry_parameters:
+            values = [getattr(exam, parameter) for exam in biochemistry_data]
+            mean_value = np.mean(values)
+            median_value = np.median(values)
+            std_deviation = np.std(values)
+            print(f"{parameter} - Moyenne : {mean_value}, Médiane : {median_value}, Écart-type : {std_deviation}")
+
+    def generate_biochemistry_graphs(self, biochemistry_data):
+        # Graphiques pour les Examens de Biochimie
+        # Graphique temporel pour suivre l'évolution des résultats au fil du temps
+        exam_dates = [exam.date for exam in biochemistry_data]
+        plt.plot(exam_dates, [exam.Parameter1 for exam in biochemistry_data], marker='o', label='Parameter1', color='red')
+        plt.plot(exam_dates, [exam.Parameter2 for exam in biochemistry_data], marker='o', label='Parameter2', color='blue')
+        plt.title('Évolution des Examens de Biochimie au fil du temps')
+        plt.xlabel('Date de l\'examen')
+        plt.ylabel('Valeur des Paramètres')
+        plt.legend()
+        plt.show()
+
+        # Graphique en barres pour comparer différents paramètres biochimiques
+        parameters = ["Parameter1", "Parameter2", "Parameter3"]
+        parameter_means = [np.mean([getattr(exam, param) for exam in biochemistry_data]) for param in parameters]
+        plt.bar(parameters, parameter_means, color='orange')
+        plt.title('Comparaison de Paramètres Biochimiques')
+        plt.xlabel('Paramètre Biochimique')
+        plt.ylabel('Moyenne')
+        plt.show()
+
+        # Graphiques en secteurs pour la répartition des résultats dans les plages normales et anormales (hypothétique)
+        normal_counts = {"Normal": 50, "Anormal": 20}
+        plt.pie(normal_counts.values(), labels=normal_counts.keys(), autopct='%1.1f%%', startangle=90, colors=['green', 'red'])
+        plt.title('Répartition des Résultats Biochimiques')
+        plt.show()
+    
+    def generate_stool_statistics(self, stool_data):
+        # Statistiques générales pour les Examens de Selles
+        total_exams = len(stool_data)
+        print(f"Nombre total d'examens de selles : {total_exams}")
+
+        # Calcul des moyennes, médianes et écart-types pour les paramètres
+        parameters = ["Consistance_Selles"]
+        for parameter in parameters:
+            values = [getattr(exam, parameter) for exam in stool_data]
+            mean_value = np.mean(values)
+            median_value = np.median(values)
+            std_deviation = np.std(values)
+            print(f"{parameter} - Moyenne : {mean_value}, Médiane : {median_value}, Écart-type : {std_deviation}")
+
+    def generate_stool_graphs(self, stool_data):
+        # Graphiques pour les Examens de Selles
+        # Graphique en barres pour la présence de différentes composantes
+        components = ["Sang_Occulte", "Oeufs_Parasites"]
+        component_counts = {component: sum([getattr(exam, component) for exam in stool_data]) for component in components}
+        plt.bar(component_counts.keys(), component_counts.values(), color='purple')
+        plt.title('Présence de Composants dans les Examens de Selles')
+        plt.xlabel('Composant')
+        plt.ylabel('Nombre d\'Examens')
+        plt.show()
+
+        # Graphique en secteurs pour la répartition des apparences des selles (hypothétique)
+        appearance_counts = {"Normal": 40, "Anormal": 15}
+        plt.pie(appearance_counts.values(), labels=appearance_counts.keys(), autopct='%1.1f%%', startangle=90, colors=['brown', 'gray'])
+        plt.title('Répartition des Apparences des Selles')
+        plt.show()
+
+    # ... Autres fonctions existantes ...
+    
+    def generate_serology_statistics(self, serology_data):
+        # Statistiques générales pour la Sérologie
+        total_exams = len(serology_data)
+        print(f"Nombre total d'examens de sérologie : {total_exams}")
+
+        # Pour chaque test, la fréquence de résultats positifs et négatifs
+        tests = ["Test1", "Test2", "Test3"]  # Remplacez par les noms réels des tests
+        for test in tests:
+            positive_count = sum([getattr(exam, test) == "Positif" for exam in serology_data])
+            negative_count = sum([getattr(exam, test) == "Négatif" for exam in serology_data])
+            print(f"{test} - Positif : {positive_count}, Négatif : {negative_count}")
+
+    def generate_serology_graphs(self, serology_data):
+        # Graphiques pour la Sérologie
+        # Graphique en barres pour comparer les résultats de différents tests de sérologie
+        tests = ["Test1", "Test2", "Test3"]
+        test_results = {test: sum([getattr(exam, test) == "Positif" for exam in serology_data]) for test in tests}
+        plt.bar(test_results.keys(), test_results.values(), color='pink')
+        plt.title('Comparaison des Résultats de Tests de Sérologie')
+        plt.xlabel('Test de Sérologie')
+        plt.ylabel('Nombre d\'Examens Positifs')
+        plt.show()
+
+        # Graphique en secteurs pour la distribution des résultats positifs et négatifs (hypothétique)
+        result_counts = {"Positif": 40, "Négatif": 25}
+        plt.pie(result_counts.values(), labels=result_counts.keys(), autopct='%1.1f%%', startangle=90, colors=['red', 'green'])
+        plt.title('Distribution des Résultats de Tests de Sérologie')
+        plt.show()
+    
+    def generate_hematology_statistics(self, hemogramme_results):
+        # Statistiques générales pour les examens de type hemogramme
+        total_exams = len(hemogramme_results)
+        mean_values = np.mean(hemogramme_results, axis=0)
+        median_values = np.median(hemogramme_results, axis=0)
+        std_dev_values = np.std(hemogramme_results, axis=0)
+
+        return total_exams, mean_values, median_values, std_dev_values
+
+    def generate_hematology_histograms(self, hemogramme_results):
+        # Histogrammes pour visualiser la distribution des valeurs des paramètres
+        for i in range(hemogramme_results.shape[1]):
+            plt.hist(hemogramme_results[:, i], bins=20, edgecolor='black')
+            plt.title(f'Distribution de {ExamensHemogramme.PARAMETERS[i]}')
+            plt.xlabel(ExamensHemogramme.PARAMETERS[i])
+            plt.ylabel('Fréquence')
+            plt.show()
+
+    def generate_temporal_evolution_chart(self, hemogramme_results):
+        # Graphique temporel pour suivre l'évolution des résultats au fil du temps
+        # Supposons que la première colonne représente la date des examens
+        dates = hemogramme_results[:, 0]
+        parameter_values = hemogramme_results[:, 1]  # Supposons que la deuxième colonne représente un paramètre quelconque
+
+        plt.plot(dates, parameter_values, marker='o')
+        plt.title('Évolution temporelle d\'un paramètre')
+        plt.xlabel('Date')
+        plt.ylabel('Valeur du paramètre')
+        plt.show()
+
+    def generate_blood_group_distribution_chart(self, blood_groups):
+        # Graphiques en secteurs pour la répartition des groupes sanguins
+        blood_group_counts = np.unique(blood_groups, return_counts=True)
+        labels = blood_group_counts[0]
+        counts = blood_group_counts[1]
+
+        plt.pie(counts, labels=labels, autopct='%1.1f%%', startangle=90)
+        plt.title('Répartition des groupes sanguins')
+        plt.show()
+    # ... Autres fonctions existantes ...
+
+     
 
     def get_lab_data(self):
-        #test_results = ResultatsExamens.query.all()
-        #test_frequency = FrequencesTests.query.all()
-        #result_comparison = ComparaisonResultats.query.all()
-        return #test_results, test_frequency, result_comparison
+        urine_data = ExamenUrine.query.all()
+        biochemistry_data = ExamensBiochimie.query.all()
+        stool_data = ExamensSelles.query.all()
+        serology_data = Serologie.query.all()
+        hemogramme_results = ExamensHemogramme.query.all()
+         
+        return urine_data, biochemistry_data, stool_data, serology_data, hemogramme_results  
 
     def generate_all_analytics(self):
         # Récupérer les données de la base de données
-        test_results, test_frequency, result_comparison = self.get_lab_data()
+        urine_data, biochemistry_data, stool_data, serology_data, hemogramme_results  = self.get_lab_data()
 
         # Générer des graphiques pour la section Labo
-        self.generate_test_results_chart(test_results)
-        self.generate_test_frequency_chart(test_frequency)
-        self.generate_result_comparison_chart(result_comparison)
+        self.generate_urine_statistics(urine_data)
+        self.generate_urine_graphs(urine_data)
+        self.generate_biochemistry_graphs(biochemistry_data)
+        self.generate_biochemistry_statistics(biochemistry_data)
+        self.generate_stool_statistics(stool_data)
+        self.generate_stool_graphs(stool_data)
+        self.generate_serology_statistics(serology_data)
+        self.generate_serology_graphs(serology_data)
+        self.generate_hematology_statistics(hemogramme_results)
+        self.generate_hematology_histograms(hemogramme_results)
+        self.generate_temporal_evolution_chart(hemogramme_results)
+        self.generate_blood_group_distribution_chart(hemogramme_results)
 
 class DataFilter:
     def __init__(self):
