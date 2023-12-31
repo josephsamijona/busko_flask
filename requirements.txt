@@ -14,3 +14,4 @@ seaborn
 reportlab
 scikit-learn
 python-socketio
+basemap

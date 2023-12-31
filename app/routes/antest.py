@@ -15,30 +15,207 @@ import pandas as pd
 from reportlab.pdfgen import canvas
 import tempfile
 from io import StringIO
+from mpl_toolkits.basemap import Basemap
 
 
-analytic = Blueprint('analytic', __name__)
-
+analytics = Blueprint('analytics', __name__)
 
 
  
-
-class AnalyticsGenerator:
+class PatientAnalytics:
     def __init__(self):
         pass
 
-    def generate_patient_analytics(self, patients_data, history_data, appointments_data):
-        # Exemple de graphique pour la fréquence des visites des patients
-        patient_visits = [len(patient.appointments) for patient in patients_data]
-        plt.hist(patient_visits, bins=20, color='skyblue', edgecolor='black')
-        plt.title('Fréquence des visites des patients')
-        plt.xlabel('Nombre de visites')
-        plt.ylabel('Nombre de patients')
+
+    def get_patient_data(self):
+        patients_data = DossierMedical.query.all()
+        history_data = HistoriquePatient.query.all()
+        appointments_data = Rendezvous.query.all()
+        return patients_data, history_data, appointments_data
+    
+    def generate_demographics_chart(self, patients_data):
+        # Calculer le total du nombre de patients
+        total_patients = len(patients_data)
+
+        # Créer un diagramme circulaire
+        labels = ['Total des Patients', 'Autres']
+        sizes = [total_patients, 0]  # 0 pour "Autres" car nous n'avons pas d'autres catégories ici
+
+        fig1, ax1 = plt.subplots()
+        ax1.pie(sizes, labels=labels, autopct='%1.1f%%', startangle=90, colors=['skyblue', 'lightgray'])
+        ax1.axis('equal')  # Equal aspect ratio ensures that pie is drawn as a circle.
+
+        plt.title('Démographie des Patients')
+        plt.show()
+        pass
+        
+
+    def generate_age_distribution_chart(self, patients_data):
+        # Obtenez les âges des patients
+        ages = [patient.age for patient in patients_data if patient.age is not None]
+
+        # Créez des intervalles d'âge
+        bins = [0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100]
+
+        # Générez l'histogramme
+        plt.hist(ages, bins=bins, color='skyblue', edgecolor='black')
+        plt.title('Répartition des Patients par Tranche d\'Âge')
+        plt.xlabel('Âge')
+        plt.ylabel('Nombre de Patients')
+        plt.show()
+        pass
+
+    def generate_gender_distribution_chart(self, patients_data):
+        # Obtenez les genres des patients
+        genders = [patient.gender for patient in patients_data if patient.gender is not None]
+
+        # Comptez le nombre de patients de chaque genre
+        gender_counts = {gender: genders.count(gender) for gender in set(genders)}
+
+        # Générez le diagramme circulaire
+        labels = gender_counts.keys()
+        sizes = gender_counts.values()
+
+        plt.pie(sizes, labels=labels, autopct='%1.1f%%', colors=['skyblue', 'lightcoral'])
+        plt.title('Répartition des Patients par Genre')
+        plt.show()
+        pass
+
+    def generate_geographic_distribution_chart(self, patients_data):
+        # Exemple de carte géographique pour la répartition des patients par origine géographique
+        # Utilisez les données appropriées pour générer la carte
+
+        # Obtenez les coordonnées géographiques des patients (latitude, longitude)
+        coordinates = [(patient.latitude, patient.longitude) for patient in patients_data
+                       if patient.latitude is not None and patient.longitude is not None]
+
+        # Générez la carte géographique
+        plt.figure(figsize=(10, 8))
+        m = Basemap(projection='mill', llcrnrlat=-60, urcrnrlat=85, llcrnrlon=-180, urcrnrlon=180, resolution='c')
+        m.drawmapboundary(fill_color='#A6CAE0', linewidth=0)
+        m.drawcoastlines(linewidth=0.5)
+        m.drawcountries(linewidth=0.5)
+
+        # Tracez les points sur la carte
+        lats, lons = zip(*coordinates)
+        x, y = m(lons, lats)
+        m.scatter(x, y, s=50, color='red', alpha=0.7)
+
+        plt.title('Répartition Géographique des Patients')
+        plt.show()
+        pass
+
+     
+
+    def generate_religion_nationality_chart(self, patients_data):
+        # Exemple de diagramme en barres ou diagramme circulaire pour la répartition des patients par religion ou nationalité
+        # Utilisez les données appropriées pour générer le graphique
+
+        # Obtenez les données de religion ou nationalité des patients
+        religion_nationality_data = [(patient.religion, patient.nationality) for patient in patients_data
+                                      if patient.religion is not None and patient.nationality is not None]
+
+        # Comptez le nombre de patients par religion ou nationalité
+        religion_nationality_counts = {(religion, nationality): religion_nationality_data.count((religion, nationality))
+                                       for religion, nationality in set(religion_nationality_data)}
+
+        # Générez le diagramme en barres
+        labels = [f"{religion}\n{nationality}" for religion, nationality in religion_nationality_counts.keys()]
+        values = religion_nationality_counts.values()
+
+        plt.bar(labels, values, color='skyblue')
+        plt.title('Répartition des Patients par Religion ou Nationalité')
+        plt.xlabel('Religion et Nationalité')
+        plt.ylabel('Nombre de Patients')
+        plt.xticks(rotation=45, ha='right')
         plt.show()
 
-        # Ajoutez d'autres exemples de graphiques pour la section des patients
+        # Ou générer le diagramme circulaire (décommentez le bloc ci-dessous)
+        """
+        plt.pie(values, labels=labels, autopct='%1.1f%%', startangle=140, colors=plt.cm.Paired.colors)
+        plt.title('Répartition des Patients par Religion ou Nationalité')
+        plt.show()
+        """
+        pass
 
-    def generate_inventory_analytics(self, inventory_data, movements_data, suppliers_data, alerts_data):
+     
+    
+    def generate_blood_type_distribution_chart(self, patients_data):
+       # Exemple de diagramme en barres pour la répartition des patients par groupe sanguin
+        # Utilisez les données appropriées pour générer le graphique
+
+        # Obtenez les données sur les groupes sanguins des patients
+        blood_type_data = [patient.blood_type for patient in patients_data if patient.blood_type is not None]
+
+        # Comptez le nombre de patients par groupe sanguin
+        blood_type_counts = {blood_type: blood_type_data.count(blood_type) for blood_type in set(blood_type_data)}
+
+        # Générez le diagramme en barres
+        labels = list(blood_type_counts.keys())
+        values = list(blood_type_counts.values())
+
+        plt.bar(labels, values, color='skyblue')
+        plt.title('Répartition des Patients par Groupe Sanguin')
+        plt.xlabel('Groupe Sanguin')
+        plt.ylabel('Nombre de Patients')
+        plt.show()
+
+        pass
+
+    def generate_medical_parameters_correlation_chart(self, patients_data):
+        # Exemple de matrice de corrélation ou nuage de points pour la corrélation entre paramètres médicaux
+        # Utilisez les données appropriées pour générer le graphique
+
+        # Obtenez les données sur les paramètres médicaux des patients
+        medical_data = [
+            {'weight': patient.weight, 'height': patient.height, 'blood_pressure': patient.blood_pressure}
+            for patient in patients_data
+        ]
+
+        # Créez un DataFrame Pandas à partir des données
+        df = pd.DataFrame(medical_data)
+
+        # Générez la matrice de corrélation
+        correlation_matrix = df.corr()
+
+        # Affichez la matrice de corrélation sous forme de heatmap
+        plt.figure(figsize=(8, 6))
+        plt.imshow(correlation_matrix, cmap='coolwarm', interpolation='none', aspect='auto')
+        plt.colorbar()
+        plt.xticks(range(len(correlation_matrix)), correlation_matrix.columns, rotation='vertical')
+        plt.yticks(range(len(correlation_matrix)), correlation_matrix.columns)
+        plt.title('Matrice de Corrélation entre Paramètres Médicaux')
+        plt.show()
+
+        # Générez un nuage de points pour une paire spécifique de paramètres (par exemple, poids vs taille)
+        plt.scatter(df['weight'], df['height'])
+        plt.title('Corrélation entre Poids et Taille')
+        plt.xlabel('Poids (kg)')
+        plt.ylabel('Taille (cm)')
+        plt.show()
+
+        pass
+
+    def generate_all_analytics(self):
+        # Récupérer les données de la base de données
+        patients_data, history_data, appointments_data = self.get_patient_data()
+
+        # Générer des graphiques pour la section Patient
+        
+        self.generate_demographics_chart(patients_data)
+        self.generate_age_distribution_chart(patients_data)
+        self.generate_gender_distribution_chart(patients_data)
+        self.generate_geographic_distribution_chart(patients_data)
+        self.generate_religion_nationality_chart(patients_data)
+        self.generate_blood_type_distribution_chart(patients_data)
+        self.generate_medical_parameters_correlation_chart(patients_data)
+
+
+class InventoryAnalytics:
+    def __init__(self):
+        pass
+
+    def generate_inventory_levels_chart(self, inventory_data):
         # Exemple de graphique pour les niveaux d'inventaire
         inventory_levels = [item.quantity_in_stock for item in inventory_data]
         plt.bar(range(len(inventory_levels)), inventory_levels, color='green')
@@ -47,9 +224,40 @@ class AnalyticsGenerator:
         plt.ylabel('Quantité en stock')
         plt.show()
 
-        # Ajoutez d'autres exemples de graphiques pour la section de l'inventaire
+    def generate_inventory_movements_chart(self, movements_data):
+        # Ajoutez ici la logique pour générer un graphique des mouvements d'inventaire
+        pass
 
-    def generate_finance_analytics(self, invoices_data, income_data, expenses_data, sales_data):
+    def generate_reorder_alerts_chart(self, alerts_data):
+        # Ajoutez ici la logique pour générer un graphique des alertes de réapprovisionnement
+        pass
+
+    def generate_item_cost_chart(self, suppliers_data):
+        # Ajoutez ici la logique pour générer un graphique du coût des articles
+        pass
+
+    def get_inventory_data(self):
+        inventory_data = Inventaire.query.all()
+        movements_data = MouvementsInventaire.query.all()
+        suppliers_data = Fournisseurs.query.all()
+        alerts_data = AlertesReapprovisionnement.query.all()
+        return inventory_data, movements_data, suppliers_data, alerts_data
+
+    def generate_all_analytics(self):
+        # Récupérer les données de la base de données
+        inventory_data, movements_data, suppliers_data, alerts_data = self.get_inventory_data()
+
+        # Générer des graphiques pour la section Inventaire
+        self.generate_inventory_levels_chart(inventory_data)
+        self.generate_inventory_movements_chart(movements_data)
+        self.generate_reorder_alerts_chart(alerts_data)
+        self.generate_item_cost_chart(suppliers_data)
+
+class FinanceAnalytics:
+    def __init__(self):
+        pass
+
+    def generate_invoice_tracking_chart(self, invoices_data):
         # Exemple de graphique pour le suivi des factures
         invoice_amounts = [invoice.amount for invoice in invoices_data]
         plt.plot(range(len(invoice_amounts)), invoice_amounts, marker='o', color='purple')
@@ -58,20 +266,17 @@ class AnalyticsGenerator:
         plt.ylabel('Montant')
         plt.show()
 
-        # Ajoutez d'autres exemples de graphiques pour la section financière
+    def generate_income_expense_chart(self, income_data, expenses_data):
+        # Ajoutez ici la logique pour générer un graphique des revenus et des dépenses
+        pass
 
-    def get_patient_data(self):
-        patients_data = DossierMedical.query.all()
-        history_data = HistoriquePatient.query.all()
-        appointments_data = Rendezvous.query.all()
-        return patients_data, history_data, appointments_data
+    def generate_sales_margins_chart(self, sales_data):
+        # Ajoutez ici la logique pour générer un graphique des ventes et des marges
+        pass
 
-    def get_inventory_data(self):
-        inventory_data = Inventaire.query.all()
-        movements_data = MouvementsInventaire.query.all()
-        suppliers_data = Fournisseurs.query.all()
-        alerts_data = AlertesReapprovisionnement.query.all()
-        return inventory_data, movements_data, suppliers_data, alerts_data
+    def generate_payment_analysis_chart(self):
+        # Ajoutez ici la logique pour générer un graphique de l'analyse des modes de paiement
+        pass
 
     def get_finance_data(self):
         invoices_data = Factures.query.all()
@@ -82,14 +287,47 @@ class AnalyticsGenerator:
 
     def generate_all_analytics(self):
         # Récupérer les données de la base de données
-        patients_data, history_data, appointments_data = self.get_patient_data()
-        inventory_data, movements_data, suppliers_data, alerts_data = self.get_inventory_data()
         invoices_data, income_data, expenses_data, sales_data = self.get_finance_data()
 
-        # Générer des graphiques pour chaque section
-        self.generate_patient_analytics(patients_data, history_data, appointments_data)
-        self.generate_inventory_analytics(inventory_data, movements_data, suppliers_data, alerts_data)
-        self.generate_finance_analytics(invoices_data, income_data, expenses_data, sales_data)
+        # Générer des graphiques pour la section Finance
+        self.generate_invoice_tracking_chart(invoices_data)
+        self.generate_income_expense_chart(income_data, expenses_data)
+        self.generate_sales_margins_chart(sales_data)
+        self.generate_payment_analysis_chart()
+
+class LabAnalytics:
+    def __init__(self):
+        pass
+
+    def generate_test_results_chart(self, test_results):
+        # Exemple de graphique pour les résultats des examens
+        # Ajoutez ici la logique pour générer le graphique
+        pass
+
+    def generate_test_frequency_chart(self, test_frequency):
+        # Exemple de graphique pour la fréquence des tests
+        # Ajoutez ici la logique pour générer le graphique
+        pass
+
+    def generate_result_comparison_chart(self, result_comparison):
+        # Exemple de graphique pour la comparaison des résultats
+        # Ajoutez ici la logique pour générer le graphique
+        pass
+
+    def get_lab_data(self):
+        #test_results = ResultatsExamens.query.all()
+        #test_frequency = FrequencesTests.query.all()
+        #result_comparison = ComparaisonResultats.query.all()
+        return #test_results, test_frequency, result_comparison
+
+    def generate_all_analytics(self):
+        # Récupérer les données de la base de données
+        test_results, test_frequency, result_comparison = self.get_lab_data()
+
+        # Générer des graphiques pour la section Labo
+        self.generate_test_results_chart(test_results)
+        self.generate_test_frequency_chart(test_frequency)
+        self.generate_result_comparison_chart(result_comparison)
 
 class DataFilter:
     def __init__(self):
@@ -215,17 +453,17 @@ class PredictiveAnalytics:
         plt.show()
 
 ############### gestion des routes
-analytics_generator = AnalyticsGenerator()
+ 
 data_filter = DataFilter()
-period_comparison = PeriodComparison()
+period_comparison = DataComparator()
 data_export = DataExport()
-predictive_analysis = PredictiveAnalysis()
+predictive_analysis = PredictiveAnalytics()
 patient_analytics = PatientAnalytics()
 inventory_analytics = InventoryAnalytics()
 finance_analytics = FinanceAnalytics()
 lab_analytics = LabAnalytics()
 
-@analytic.route('/analytics', methods=['GET'])
+@analytics.route('/analytics', methods=['GET'])
 def get_analytics():
     # Logique pour générer et récupérer des analyses
     return "Analyses"
@@ -233,29 +471,29 @@ def get_analytics():
 @analytics.route('/filter', methods=['POST'])
 def filter_data():
     # Exemple d'utilisation du filtre de données
-    filters = request.json  # Supposons que les filtres sont passés en tant que données JSON
-    filtered_data = data_filter.apply_filters(filters)
-    return jsonify(filtered_data)
+    #filters = request.json  # Supposons que les filtres sont passés en tant que données JSON
+    #filtered_data = data_filter.apply_filters(filters)
+    return #jsonify(filtered_data)
 
 @analytics.route('/compare_periods', methods=['POST'])
 def compare_periods():
     # Exemple d'utilisation de la comparaison de périodes
-    comparison_data = request.json  # Supposons que les données de comparaison sont passées en tant que données JSON
-    compared_data = period_comparison.compare_periods(comparison_data)
-    return jsonify(compared_data)
+    #comparison_data = #request.json  # Supposons que les données de comparaison sont passées en tant que données JSON
+    #compared_data = period_comparison.compare_periods(comparison_data)
+    return #jsonify(compared_data)
 
 @analytics.route('/export_data', methods=['POST'])
 def export_data():
     # Exemple d'utilisation de l'exportation de données
-    export_options = request.json  # Supposons que les options d'exportation sont passées en tant que données JSON
-    exported_file = data_export.export_data(export_options)
-    return jsonify({'file_path': exported_file})
+    #export_options = #request.json  # Supposons que les options d'exportation sont passées en tant que données JSON
+    #exported_file = data_export.export_data(export_options)
+    return #jsonify({'file_path': exported_file})
 
 @analytics.route('/predictive_analytics', methods=['GET'])
 def get_predictive_analytics():
     # Exemple d'utilisation de l'analyse prédictive
-    X_test, predictions = predictive_analytics.train_predictive_model()
-    predictive_analytics.plot_predictions(X_test, predictions)
+    #X_test, predictions = predictive_analytics.train_predictive_model()
+    #predictive_analytics.plot_predictions(X_test, predictions)
     return jsonify({'message': 'Predictive analytics generated'})
 
 @analytics.route('/patient', methods=['GET'])
@@ -318,8 +556,14 @@ def get_lab_analytics():
 
 
 if __name__ == "__main__":
-    # Créer une instance de la classe AnalyticsGenerator
-    analytics_generator = AnalyticsGenerator()
+    # Créer une instance de chaque classe d'Analytics
+    patient_analytics = PatientAnalytics()
+    inventory_analytics = InventoryAnalytics()
+    finance_analytics = FinanceAnalytics()
+    lab_analytics = LabAnalytics()
 
-    # Appeler la méthode pour générer tous les analytics
-    analytics_generator.generate_all_analytics()
+    # Générer les analytics pour chaque section
+    patient_analytics.generate_all_analytics()
+    inventory_analytics.generate_all_analytics()
+    finance_analytics.generate_all_analytics()
+    lab_analytics.generate_all_analytics()
