@@ -16,6 +16,8 @@ from reportlab.pdfgen import canvas
 import tempfile
 from io import StringIO
 from mpl_toolkits.basemap import Basemap
+from collections import Counter
+from collections import defaultdict
 
 
 analytics = Blueprint('analytics', __name__)
@@ -214,26 +216,585 @@ class InventoryAnalytics:
     def __init__(self):
         pass
 
-    def generate_inventory_levels_chart(self, inventory_data):
-        # Exemple de graphique pour les niveaux d'inventaire
-        inventory_levels = [item.quantity_in_stock for item in inventory_data]
-        plt.bar(range(len(inventory_levels)), inventory_levels, color='green')
-        plt.title('Niveaux d\'inventaire')
+
+    def generate_article_quantity_by_category_chart(self, inventory_data):
+        
+        categories = [item.category for item in inventory_data]
+        quantity = [item.quantity for item in inventory_data]
+        plt.bar(categories, quantity, color='skyblue')
+        plt.title('Quantité d\'articles par catégorie')
+        plt.xlabel('Catégorie')
+        plt.ylabel('Quantité')
+        plt.xticks(rotation=45, ha='right')  # Ajustez l'angle et l'alignement des étiquettes sur l'axe des x
+        plt.show()        
+                
+        pass
+
+    def generate_current_stock_per_item_chart(self, inventory_data):
+        # Exemple de graphique pour le stock actuel par article (diagramme à barres empilées)
+        items = [item.name for item in inventory_data]
+        current_stock = [item.quantity_in_stock for item in inventory_data]
+        minimum_stock = [item.minimum_quantity for item in inventory_data]
+
+        fig, ax = plt.subplots()
+        ax.bar(items, current_stock, label='Stock actuel', color='skyblue')
+        ax.bar(items, minimum_stock, label='Quantité minimale', color='orange', alpha=0.7)
+
+        plt.title('Stock actuel par article')
+        plt.xlabel('Article')
+        plt.ylabel('Quantité')
+        plt.xticks(rotation=45, ha='right')  # Ajustez l'angle et l'alignement des étiquettes sur l'axe des x
+        plt.legend()
+        plt.show()
+        
+        pass
+
+    def generate_top_n_most_active_articles_chart(self, movements_data, n=5):
+       # Exemple de graphique pour le top N des articles les plus mouvementés
+        articles = [movement.article_name for movement in movements_data]
+        movement_counts = Counter(articles)
+        top_n_articles = dict(movement_counts.most_common(n))
+
+        plt.bar(top_n_articles.keys(), top_n_articles.values(), color='skyblue')
+        plt.title(f'Top {n} des articles les plus mouvementés')
+        plt.xlabel('Article')
+        plt.ylabel('Nombre de mouvements')
+        plt.xticks(rotation=45, ha='right')  # Ajustez l'angle et l'alignement des étiquettes sur l'axe des x
+        plt.show()
+        pass
+
+    def generate_movement_distribution_by_type_chart(self, movements_data):
+        # Exemple de graphique pour la répartition des mouvements d'inventaire par type
+        movement_types = [movement.type for movement in movements_data]
+        movement_type_counts = Counter(movement_types)
+
+        plt.pie(movement_type_counts.values(), labels=movement_type_counts.keys(), autopct='%1.1f%%', colors=['skyblue', 'lightcoral'])
+        plt.title('Répartition des mouvements d\'inventaire par type')
+        plt.show()
+        pass
+
+    def generate_inventory_history_by_article_chart(self, movements_data):
+        # Exemple de graphique pour l'historique des mouvements d'inventaire par article
+        article_history = defaultdict(list)
+
+        for movement in movements_data:
+            article_history[movement.article_name].append((movement.date, movement.quantity))
+
+        # Tracer l'historique pour chaque article
+        for article, history in article_history.items():
+            dates, quantities = zip(*history)
+            plt.plot(dates, quantities, label=article, marker='o')
+
+        plt.title('Historique des mouvements d\'inventaire par article')
+        plt.xlabel('Date')
+        plt.ylabel('Quantité')
+        plt.legend()
+        plt.show()
+        pass
+
+    def generate_top_n_most_active_medicines_chart(self, movements_data, n=5):
+        # Exemple de graphique pour le top N des médicaments les plus mouvementés
+        medicine_counter = Counter(movement.article_name for movement in movements_data)
+        top_n_medicines = medicine_counter.most_common(n)
+
+        medicine_names, counts = zip(*top_n_medicines)
+
+        plt.bar(medicine_names, counts, color='blue')
+        plt.title(f'Top {n} des médicaments les plus mouvementés')
+        plt.xlabel('Médicament')
+        plt.ylabel('Nombre de mouvements')
+        plt.show()
+        pass
+
+    def generate_order_reception_evolution_chart(self, movements_data):
+        # Exemple de graphique pour l'évolution des commandes et réceptions de médicaments
+        ordered_dates = [movement.date for movement in movements_data if movement.type == 'Order']
+        received_dates = [movement.date for movement in movements_data if movement.type == 'Reception']
+
+        ordered_counts = Counter(map(lambda x: x.date(), ordered_dates))
+        received_counts = Counter(map(lambda x: x.date(), received_dates))
+
+        all_dates = sorted(set(ordered_counts.keys()) | set(received_counts.keys()))
+
+        ordered_values = [ordered_counts[date] for date in all_dates]
+        received_values = [received_counts[date] for date in all_dates]
+
+        plt.plot(all_dates, ordered_values, label='Commandes', marker='o')
+        plt.plot(all_dates, received_values, label='Réceptions', marker='o')
+
+        plt.title('Évolution des commandes et réceptions de médicaments')
+        plt.xlabel('Date')
+        plt.ylabel('Nombre')
+        plt.legend()
+        plt.show()
+        pass
+
+    def generate_quantity_vs_minimum_by_article_chart(self, inventory_data):
+        # Exemple de graphique pour la quantité actuelle vs quantité minimale souhaitée par article
+        articles = [item.name for item in inventory_data]
+        current_quantities = [item.quantity_in_stock for item in inventory_data]
+        minimum_quantities = [item.minimum_quantity for item in inventory_data]
+
+        x = range(len(articles))
+        width = 0.35
+
+        fig, ax = plt.subplots()
+        rects1 = ax.bar(x, current_quantities, width, label='Quantité Actuelle')
+        rects2 = ax.bar([i + width for i in x], minimum_quantities, width, label='Quantité Minimale Souhaitée')
+
+        ax.set_xlabel('Articles')
+        ax.set_ylabel('Quantité')
+        ax.set_title('Quantité actuelle vs Quantité minimale souhaitée par article')
+        ax.set_xticks([i + width / 2 for i in x])
+        ax.set_xticklabels(articles)
+        ax.legend()
+
+        plt.show()
+        pass
+
+    def generate_supplier_distribution_by_product_chart(self, suppliers_data):
+       # Exemple de graphique pour la distribution des fournisseurs par produits fournis
+        products_supplied = [supplier.product_supplied for supplier in suppliers_data]
+
+        # Count occurrences of each product
+        product_counts = Counter(products_supplied)
+
+        # Extract data for the chart
+        products = list(product_counts.keys())
+        counts = list(product_counts.values())
+
+        # Plotting
+        plt.bar(products, counts, color='blue')
         plt.xlabel('Produits')
+        plt.ylabel('Nombre de fournisseurs')
+        plt.title('Distribution des fournisseurs par produits fournis')
+        plt.xticks(rotation=45, ha='right')
+        plt.show()
+        pass
+
+    def generate_articles_without_replenishment_alerts_chart(self, inventory_data):
+        # Exemple de graphique pour les articles sans alertes de réapprovisionnement
+        # Utilisez les données appropriées pour générer le graphique
+
+        # Filter inventory data to get items without replenishment alerts
+        items_without_alerts = [item for item in inventory_data if item.replenishment_alert is None]
+
+        # Extract data for the chart
+        item_names = [item.name for item in items_without_alerts]
+        quantities = [item.quantity_in_stock for item in items_without_alerts]
+
+        # Plotting
+        plt.bar(item_names, quantities, color='green')
+        plt.xlabel('Articles')
         plt.ylabel('Quantité en stock')
+        plt.title('Articles sans alertes de réapprovisionnement')
+        plt.xticks(rotation=45, ha='right')
+        plt.show()
+        pass
+
+    def generate_expired_medicines_stock_chart(self, inventory_data):
+        # Exemple de graphique pour le stock actuel des médicaments expirés
+        # Utilisez les données appropriées pour générer le graphique
+
+        # Filter inventory data to get expired medicines
+        expired_medicines = [item for item in inventory_data if item.expiry_date is not None and item.expiry_date < datetime.now()]
+
+        # Extract data for the chart
+        medicine_names = [item.name for item in expired_medicines]
+        quantities = [item.quantity_in_stock for item in expired_medicines]
+
+        # Plotting
+        plt.bar(medicine_names, quantities, color='red')
+        plt.xlabel('Médicaments')
+        plt.ylabel('Quantité en stock')
+        plt.title('Stock actuel des médicaments expirés')
+        plt.xticks(rotation=45, ha='right')
+        plt.show()
+        pass
+
+    def generate_medicine_movement_distribution_by_lot_chart(self, movements_data):
+        # Exemple de graphique pour la répartition des mouvements de médicaments par numéro de lot
+        # Utilisez les données appropriées pour générer le graphique
+
+        # Extract data for the chart
+        lot_numbers = [movement.lot_number for movement in movements_data]
+        frequencies = Counter(lot_numbers)
+
+        # Plotting
+        plt.bar(frequencies.keys(), frequencies.values(), color='blue')
+        plt.xlabel('Numéro de Lot')
+        plt.ylabel('Fréquence de Mouvements')
+        plt.title('Répartition des mouvements de médicaments par numéro de lot')
+        plt.xticks(rotation=45, ha='right')
+        plt.show()
+        pass
+
+    def generate_total_cost_of_medicine_movements_by_supplier_chart(self, movements_data):
+        # Exemple de graphique pour le coût total des mouvements de médicaments par fournisseur
+        # Utilisez les données appropriées pour générer le graphique
+
+        # Extract data for the chart
+        suppliers = [movement.supplier_name for movement in movements_data]
+        costs = [movement.cost for movement in movements_data]
+
+        # Calculate total cost per supplier
+        total_costs = Counter()
+        for supplier, cost in zip(suppliers, costs):
+            total_costs[supplier] += cost
+
+        # Plotting
+        plt.bar(total_costs.keys(), total_costs.values(), color='green')
+        plt.xlabel('Fournisseur')
+        plt.ylabel('Coût Total des Mouvements')
+        plt.title('Coût total des mouvements de médicaments par fournisseur')
+        plt.xticks(rotation=45, ha='right')
+        plt.show()
+        pass
+
+    def generate_medicine_movement_distribution_by_pharmacy_chart(self, movements_data):
+       # Exemple de graphique pour la répartition des mouvements de médicaments par pharmacie
+        # Utilisez les données appropriées pour générer le graphique
+
+        # Extract data for the chart
+        pharmacies = [movement.pharmacy_name for movement in movements_data]
+        counts = Counter(pharmacies)
+
+        # Plotting
+        plt.bar(counts.keys(), counts.values(), color='blue')
+        plt.xlabel('Pharmacie')
+        plt.ylabel('Nombre de Mouvements de Médicaments')
+        plt.title('Répartition des mouvements de médicaments par pharmacie')
+        plt.xticks(rotation=45, ha='right')
+        plt.show()
+        pass
+
+    def generate_specific_medicine_stock_evolution_by_pharmacy_chart(self, movements_data, medicine_id):
+        # Exemple de graphique pour l'évolution du stock d'un médicament spécifique par pharmacie
+        # Utilisez les données appropriées pour générer le graphique
+
+        # Extract data for the chart
+        data_by_pharmacy = defaultdict(list)
+        for movement in movements_data:
+            if movement.medicine_id == medicine_id:
+                timestamp = datetime.strptime(movement.timestamp, '%Y-%m-%d %H:%M:%S')
+                data_by_pharmacy[movement.pharmacy_name].append((timestamp, movement.stock_quantity))
+
+        # Plotting
+        for pharmacy, data in data_by_pharmacy.items():
+            data.sort(key=lambda x: x[0])
+            timestamps, stock_quantities = zip(*data)
+            plt.plot(timestamps, stock_quantities, label=pharmacy)
+
+        plt.xlabel('Date')
+        plt.ylabel('Stock du Médicament spécifique')
+        plt.title('Évolution du stock d\'un médicament spécifique par pharmacie')
+        plt.legend()
+        plt.show()
+        pass
+
+    def generate_replenishment_alert_distribution_by_pharmacy_chart(self, inventory_data):
+        # Exemple de graphique pour la répartition des alertes de réapprovisionnement par pharmacie
+        # Utilisez les données appropriées pour générer le graphique
+
+        # Extracting data for the chart
+        pharmacy_alerts = {}
+        for item in inventory_data:
+            pharmacy = item.pharmacy_name
+            if item.replenishment_alert:
+                if pharmacy in pharmacy_alerts:
+                    pharmacy_alerts[pharmacy] += 1
+                else:
+                    pharmacy_alerts[pharmacy] = 1
+
+        # Plotting
+        if pharmacy_alerts:
+            plt.bar(pharmacy_alerts.keys(), pharmacy_alerts.values())
+            plt.xlabel('Pharmacie')
+            plt.ylabel('Nombre d\'Alertes de Réapprovisionnement')
+            plt.title('Répartition des alertes de réapprovisionnement par pharmacie')
+            plt.xticks(rotation=45, ha='right')
+            plt.tight_layout()
+            plt.show()
+        else:
+            print('Aucune alerte de réapprovisionnement trouvée.')
+        pass
+
+    def generate_quantity_vs_minimum_by_medicine_pharmacy_chart(self, inventory_data):
+        # Exemple de graphique pour la quantité actuelle vs quantité minimale souhaitée par médicament par pharmacie
+        # Utilisez les données appropriées pour générer le graphique
+
+        # Extracting data for the chart
+        medicine_data = {}  # Assuming inventory_data is a list of objects with relevant attributes
+        for item in inventory_data:
+            medicine = item.medicine_name
+            pharmacy = item.pharmacy_name
+            current_quantity = item.current_quantity
+            minimum_quantity = item.minimum_quantity
+
+            if medicine not in medicine_data:
+                medicine_data[medicine] = {'pharmacies': [], 'current_quantity': [], 'minimum_quantity': []}
+
+            medicine_data[medicine]['pharmacies'].append(pharmacy)
+            medicine_data[medicine]['current_quantity'].append(current_quantity)
+            medicine_data[medicine]['minimum_quantity'].append(minimum_quantity)
+
+        # Plotting
+        for medicine, data in medicine_data.items():
+            plt.figure(figsize=(10, 6))
+            plt.bar(data['pharmacies'], data['current_quantity'], label='Quantité Actuelle')
+            plt.bar(data['pharmacies'], data['minimum_quantity'], label='Quantité Minimale Souhaitée', alpha=0.7)
+
+            plt.xlabel('Pharmacie')
+            plt.ylabel('Quantité')
+            plt.title(f'Quantité Actuelle vs Quantité Minimale Souhaitée pour {medicine}')
+            plt.legend()
+            plt.xticks(rotation=45, ha='right')
+            plt.tight_layout()
+            plt.show()
+        pass
+
+    def generate_medicine_movement_distribution_by_user_pharmacy_chart(self, movements_data):
+        # Exemple de graphique pour la répartition des mouvements de médicaments par utilisateur par pharmacie
+        # Utilisez les données appropriées pour générer le graphique
+
+        # Extracting data for the chart
+        user_pharmacy_data = {}  # Assuming movements_data is a list of objects with relevant attributes
+        for movement in movements_data:
+            user = movement.user_name
+            pharmacy = movement.pharmacy_name
+            quantity = movement.quantity
+
+            if user not in user_pharmacy_data:
+                user_pharmacy_data[user] = {'pharmacies': [], 'quantity': []}
+
+            user_pharmacy_data[user]['pharmacies'].append(pharmacy)
+            user_pharmacy_data[user]['quantity'].append(quantity)
+
+        # Plotting
+        for user, data in user_pharmacy_data.items():
+            plt.figure(figsize=(10, 6))
+            plt.bar(data['pharmacies'], data['quantity'], label='Quantité de Mouvement')
+
+            plt.xlabel('Pharmacie')
+            plt.ylabel('Quantité')
+            plt.title(f'Répartition des Mouvements de Médicaments par Utilisateur {user} par Pharmacie')
+            plt.legend()
+            plt.xticks(rotation=45, ha='right')
+            plt.tight_layout()
+            plt.show()
+        pass
+
+    def generate_validation_rate_of_medicine_movements_by_pharmacy_chart(self, movements_data):
+       # Exemple de graphique pour le taux de validation des mouvements de médicaments par pharmacie
+        # Utilisez les données appropriées pour générer le graphique
+
+        # Extracting data for the chart
+        pharmacy_validation_data = {}  # Assuming movements_data is a list of objects with relevant attributes
+        for movement in movements_data:
+            pharmacy = movement.pharmacy_name
+            is_validated = movement.is_validated  # Assuming there is an attribute indicating validation status
+
+            if pharmacy not in pharmacy_validation_data:
+                pharmacy_validation_data[pharmacy] = {'total': 0, 'validated': 0}
+
+            pharmacy_validation_data[pharmacy]['total'] += 1
+            if is_validated:
+                pharmacy_validation_data[pharmacy]['validated'] += 1
+
+        # Calculating validation rates
+        validation_rates = {}
+        for pharmacy, data in pharmacy_validation_data.items():
+            total = data['total']
+            validated = data['validated']
+            rate = (validated / total) * 100 if total > 0 else 0
+            validation_rates[pharmacy] = rate
+
+        # Plotting
+        plt.figure(figsize=(10, 6))
+        plt.bar(validation_rates.keys(), validation_rates.values(), color='green', alpha=0.7)
+
+        plt.xlabel('Pharmacie')
+        plt.ylabel('Taux de Validation (%)')
+        plt.title('Taux de Validation des Mouvements de Médicaments par Pharmacie')
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
+        plt.show()
+        pass
+
+    def generate_total_cost_of_medicine_movements_by_period_pharmacy_chart(self, movements_data):
+        # Exemple de graphique pour le coût total des mouvements de médicaments par période par pharmacie
+        # Utilisez les données appropriées pour générer le graphique
+
+        # Extracting data for the chart
+        pharmacy_cost_data = {}  # Assuming movements_data is a list of objects with relevant attributes
+        for movement in movements_data:
+            pharmacy = movement.pharmacy_name
+            cost = movement.medicine_cost  # Assuming there is an attribute indicating the cost
+
+            if pharmacy not in pharmacy_cost_data:
+                pharmacy_cost_data[pharmacy] = {'total_cost': 0}
+
+            pharmacy_cost_data[pharmacy]['total_cost'] += cost
+
+        # Plotting
+        plt.figure(figsize=(12, 6))
+        for pharmacy, data in pharmacy_cost_data.items():
+            plt.bar(pharmacy, data['total_cost'], color='blue', alpha=0.7)
+
+        plt.xlabel('Pharmacie')
+        plt.ylabel('Coût Total des Mouvements de Médicaments')
+        plt.title('Coût Total des Mouvements de Médicaments par Période par Pharmacie')
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
+        plt.show()
+        pass
+
+    def generate_medicine_movement_distribution_by_storage_location_pharmacy_chart(self, movements_data):
+        # Exemple de graphique pour la répartition des mouvements de médicaments par emplacement de stockage par pharmacie
+        # Utilisez les données appropriées pour générer le graphique
+
+        # Extracting data for the chart
+        pharmacy_storage_data = {}  # Assuming movements_data is a list of objects with relevant attributes
+        for movement in movements_data:
+            pharmacy = movement.pharmacy_name
+            storage_location = movement.storage_location  # Assuming there is an attribute indicating the storage location
+
+            if pharmacy not in pharmacy_storage_data:
+                pharmacy_storage_data[pharmacy] = {'storage_locations': set()}
+
+            pharmacy_storage_data[pharmacy]['storage_locations'].add(storage_location)
+
+        # Plotting
+        plt.figure(figsize=(12, 6))
+        for pharmacy, data in pharmacy_storage_data.items():
+            storage_count = len(data['storage_locations'])
+            plt.bar(pharmacy, storage_count, color='green', alpha=0.7)
+
+        plt.xlabel('Pharmacie')
+        plt.ylabel('Nombre d\'Emplacements de Stockage')
+        plt.title('Répartition des Mouvements de Médicaments par Emplacement de Stockage par Pharmacie')
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
+        plt.show()
+        pass
+
+    def generate_medicine_movement_distribution_by_storage_method_pharmacy_chart(self, movements_data):
+        # Exemple de graphique pour la répartition des mouvements de médicaments par méthode de stockage par pharmacie
+        # Utilisez les données appropriées pour générer le graphique
+
+        # Extracting data for the chart
+        pharmacy_method_data = {}  # Assuming movements_data is a list of objects with relevant attributes
+        for movement in movements_data:
+            pharmacy = movement.pharmacy_name
+            storage_method = movement.storage_method  # Assuming there is an attribute indicating the storage method
+
+            if pharmacy not in pharmacy_method_data:
+                pharmacy_method_data[pharmacy] = {'storage_methods': set()}
+
+            pharmacy_method_data[pharmacy]['storage_methods'].add(storage_method)
+
+        # Plotting
+        plt.figure(figsize=(12, 6))
+        for pharmacy, data in pharmacy_method_data.items():
+            method_count = len(data['storage_methods'])
+            plt.bar(pharmacy, method_count, color='blue', alpha=0.7)
+
+        plt.xlabel('Pharmacie')
+        plt.ylabel('Nombre de Méthodes de Stockage')
+        plt.title('Répartition des Mouvements de Médicaments par Méthode de Stockage par Pharmacie')
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
+        plt.show()
+        pass
+
+    def generate_expired_medicines_stock_by_pharmacy_chart(self, inventory_data):
+        # Exemple de graphique pour le stock actuel des médicaments expirés par pharmacie
+        # Utilisez les données appropriées pour générer le graphique
+
+        # Extracting data for the chart
+        pharmacy_expired_stock = {}  # Assuming inventory_data is a list of objects with relevant attributes
+        for item in inventory_data:
+            pharmacy = item.pharmacy_name
+            expired_stock = item.expired_stock  # Assuming there is an attribute indicating the expired stock
+
+            if pharmacy not in pharmacy_expired_stock:
+                pharmacy_expired_stock[pharmacy] = {'expired_stock': 0}
+
+            pharmacy_expired_stock[pharmacy]['expired_stock'] += expired_stock
+
+        # Plotting
+        plt.figure(figsize=(12, 6))
+        for pharmacy, data in pharmacy_expired_stock.items():
+            plt.bar(pharmacy, data['expired_stock'], color='red', alpha=0.7)
+
+        plt.xlabel('Pharmacie')
+        plt.ylabel('Stock de Médicaments Expirés')
+        plt.title('Stock Actuel des Médicaments Expirés par Pharmacie')
+        plt.xticks(rotation=45, ha='right')
+        plt.tight_layout()
+        plt.show()
+        pass
+
+    def generate_medicine_movement_distribution_by_lot_by_pharmacy_chart(self, movements_data):
+        # Exemple de graphique pour la répartition des mouvements de médicaments par numéro de lot par pharmacie
+        # Utilisez les données appropriées pour générer le graphique
+
+        # Extracting data for the chart
+        pharmacy_lot_distribution = defaultdict(lambda: defaultdict(int))
+
+        for movement in movements_data:
+            pharmacy = movement.pharmacy_name
+            lot_number = movement.lot_number
+
+            pharmacy_lot_distribution[pharmacy][lot_number] += 1
+
+        # Plotting
+        plt.figure(figsize=(12, 6))
+        for pharmacy, lot_data in pharmacy_lot_distribution.items():
+            lots = list(lot_data.keys())
+            counts = list(lot_data.values())
+            plt.bar(lots, counts, alpha=0.7, label=pharmacy)
+
+        plt.xlabel('Numéro de Lot')
+        plt.ylabel('Nombre de Mouvements')
+        plt.title('Répartition des Mouvements de Médicaments par Numéro de Lot par Pharmacie')
+        plt.legend()
+        plt.tight_layout()
         plt.show()
 
-    def generate_inventory_movements_chart(self, movements_data):
-        # Ajoutez ici la logique pour générer un graphique des mouvements d'inventaire
         pass
 
-    def generate_reorder_alerts_chart(self, alerts_data):
-        # Ajoutez ici la logique pour générer un graphique des alertes de réapprovisionnement
+    def generate_total_cost_of_medicine_movements_by_supplier_by_pharmacy_chart(self, movements_data):
+        # Exemple de graphique pour le coût total des mouvements de médicaments par fournisseur par pharmacie
+        # Utilisez les données appropriées pour générer le graphique
+
+        # Extracting data for the chart
+        pharmacy_supplier_cost = defaultdict(lambda: defaultdict(float))
+
+        for movement in movements_data:
+            pharmacy = movement.pharmacy_name
+            supplier = movement.supplier_name
+            cost = movement.cost
+
+            pharmacy_supplier_cost[pharmacy][supplier] += cost
+
+        # Plotting
+        plt.figure(figsize=(12, 6))
+        for pharmacy, supplier_data in pharmacy_supplier_cost.items():
+            suppliers = list(supplier_data.keys())
+            costs = list(supplier_data.values())
+            plt.bar(suppliers, costs, alpha=0.7, label=pharmacy)
+
+        plt.xlabel('Fournisseur')
+        plt.ylabel('Coût Total des Mouvements')
+        plt.title('Coût Total des Mouvements de Médicaments par Fournisseur par Pharmacie')
+        plt.legend()
+        plt.tight_layout()
+        plt.show()
         pass
 
-    def generate_item_cost_chart(self, suppliers_data):
-        # Ajoutez ici la logique pour générer un graphique du coût des articles
-        pass
+    
+     
 
     def get_inventory_data(self):
         inventory_data = Inventaire.query.all()
@@ -246,11 +807,35 @@ class InventoryAnalytics:
         # Récupérer les données de la base de données
         inventory_data, movements_data, suppliers_data, alerts_data = self.get_inventory_data()
 
-        # Générer des graphiques pour la section Inventaire
-        self.generate_inventory_levels_chart(inventory_data)
-        self.generate_inventory_movements_chart(movements_data)
-        self.generate_reorder_alerts_chart(alerts_data)
-        self.generate_item_cost_chart(suppliers_data)
+         
+
+        # Ajouter les autres fonctions ici
+        self.generate_article_quantity_by_category_chart(inventory_data)
+        self.generate_current_stock_per_item_chart(inventory_data)
+        self.generate_top_n_most_active_articles_chart(movements_data)
+        self.generate_movement_distribution_by_type_chart(movements_data)
+        self.generate_inventory_history_by_article_chart(movements_data)
+        self.generate_top_n_most_active_medicines_chart(movements_data)
+        self.generate_order_reception_evolution_chart(movements_data)
+        self.generate_quantity_vs_minimum_by_article_chart(inventory_data)
+        self.generate_supplier_distribution_by_product_chart(suppliers_data)
+        self.generate_articles_without_replenishment_alerts_chart(inventory_data)
+        self.generate_expired_medicines_stock_chart(inventory_data)
+        self.generate_medicine_movement_distribution_by_lot_chart(movements_data)
+        self.generate_total_cost_of_medicine_movements_by_supplier_chart(movements_data)
+        self.generate_medicine_movement_distribution_by_pharmacy_chart(movements_data)
+        self.generate_specific_medicine_stock_evolution_by_pharmacy_chart(movements_data)
+        self.generate_replenishment_alert_distribution_by_pharmacy_chart(inventory_data)
+        self.generate_quantity_vs_minimum_by_medicine_pharmacy_chart(inventory_data)
+        self.generate_medicine_movement_distribution_by_user_pharmacy_chart(movements_data)
+        self.generate_validation_rate_of_medicine_movements_by_pharmacy_chart(movements_data)
+        self.generate_total_cost_of_medicine_movements_by_period_pharmacy_chart(movements_data)
+        self.generate_medicine_movement_distribution_by_storage_location_pharmacy_chart(movements_data)
+        self.generate_medicine_movement_distribution_by_storage_method_pharmacy_chart(movements_data)
+        self.generate_expired_medicines_stock_by_pharmacy_chart(inventory_data)
+        self.generate_medicine_movement_distribution_by_lot_by_pharmacy_chart(movements_data)
+        self.generate_total_cost_of_medicine_movements_by_supplier_by_pharmacy_chart(movements_data)  
+
 
 class FinanceAnalytics:
     def __init__(self):
