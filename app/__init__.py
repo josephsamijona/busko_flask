@@ -13,6 +13,7 @@ db.init_app(app)
 migrate = Migrate(app, db)
 # Crée les instances des extensions
 login_manager = LoginManager()
+
 api = Api()
 
 # Import your models
@@ -44,7 +45,7 @@ def create_app():
     from app.routes.dashboard import dashboard
     from app.routes.setting import setting
     from app.routes.historique import historique
-    from app.routes.histrdvous import histrdvous
+    from app.routes.loginsignup import loginsignup
     from app.routes.prescription import prescription
     from app.routes.stock_routes import stock_routes
 
@@ -59,9 +60,10 @@ def create_app():
     app.register_blueprint(analytic)
     app.register_blueprint(dashboard)
     app.register_blueprint(historique)
-    app.register_blueprint(histrdvous)
+    app.register_blueprint(loginsignup)
     app.register_blueprint(prescription)
     app.register_blueprint(setting)
+    app.register_blueprint(loginsignup)
    
 
 
