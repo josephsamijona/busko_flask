@@ -1,32 +1,37 @@
+# app/routes/admin/dashboard.py
 from flask import Blueprint, jsonify
 from flask_login import login_required, current_user
-from app.models import Rendezvous
+from app.models import Utilisateur, db
 from datetime import datetime
 
 # Créez un Blueprint pour les routes du tableau de bord
-dashboard_bp = Blueprint('dashboard', __name__)
+dashboard_bp = Blueprint('dashboard', __name__, url_prefix='/admin/dashboard')
 
 # Route pour obtenir les informations du tableau de bord
-# admin/dashboard.py
+@dashboard_bp.route('/info', methods=['GET'])
+@login_required
+def get_dashboard_info():
+    # Assurez-vous que l'utilisateur actuel est un administrateur
+    if current_user.Account_Type != 'admin':
+        return jsonify({'message': 'Permission denied'}), 403
 
-def display_system_messages():
-    # Fonction pour afficher les messages système
-    pass
+    # Exemple : Récupérez le nombre total d'utilisateurs de chaque type
+    total_users = Utilisateur.query.count()
+    total_patients = Utilisateur.query.filter_by(Account_Type='patient').count()
+    total_doctors = Utilisateur.query.filter_by(Account_Type='doctor').count()
+    total_nurses = Utilisateur.query.filter_by(Account_Type='nurse').count()
 
-def display_general_statistics():
-    # Fonction pour afficher les statistiques générales
-    # (par exemple, nombre total d'utilisateurs, types d'utilisateurs, etc.)
-    pass
+    # Exemple : Récupérez des statistiques générales supplémentaires selon les besoins
 
-def main_dashboard():
-    # Fonction principale du tableau de bord
-    display_system_messages()
-    display_general_statistics()
+    # Construisez la réponse JSON
+    dashboard_info = {
+        'total_users': total_users,
+        'total_patients': total_patients,
+        'total_doctors': total_doctors,
+        'total_nurses': total_nurses,
+        # Ajoutez d'autres statistiques au besoin
+    }
 
-if __name__ == "__main__":
-    # Exécuter le tableau de bord lorsque le fichier est exécuté
-    main_dashboard()
+    return jsonify(dashboard_info), 200
 
 # Vous pouvez ajouter d'autres routes ou ressources pour le tableau de bord
-
-
